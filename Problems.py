@@ -1,8 +1,7 @@
-
+#!/usr/bin/python2
 import inspect
 import sys
-from random import random
-import random
+from random import random,sample,choice
 import solveAgent
 
 
@@ -28,70 +27,75 @@ class NQueensProblem:
     Rules for Queens are standard chess. If the queens are places in a same row, same column or diagonal, they are said to attack each other.
     Thus, we have to place qeach queen in unique row, column and diagonal. """
 
-    def __init__(self, N):
+    def __init__(self, N, debugState=[]):
         self.size = N
-        self.board = [-1 for x in range(self.size)]     #We are only making one dimensional array as opposed to matrix and enforcing different row constraint here itself.
+        if debugState:
+            self.board = debugState
+        else:
+            self.board = [int(random()*self.size) for x in range(self.size)]     #We are only making one dimensional array as opposed to matrix and enforcing different row constraint here itself.
 
     def getStartState(self):
         """We have done random assignments. However, a greedy assignments may be used to improve performance"""
-        
-        for i in range(self.size):
-            self.board[i] = int(random()*self.size)
-   
         return self.board
 
     def numConflicts(self, state, var):
         """ Find the number of conflicts in given state with respect to given variable"""
 
-        """Construct This"""
-        
-        raiseNotDefined()
+        res = 0
+        for i in range(self.size):
+            if i != var and (state[i] == state[var] or abs(i-var) == abs(state[i]-state[var])):
+                res = res+1
+        return res
 
     def getVar(self, state):
         """Return randomly any conflicted state"""
        
-        """CONSTRUCT THIS
-        varPool = All Possible Variables
+        varPool = sample(range(self.size), self.size)
 
         while varPool:
-            var = Random variabe from varPool
-            if numConflicts(state, var) > 0:
+            var = varPool.pop()
+            if self.numConflicts(state, var) > 0:
                 return var
-            else:
-                remove var from varPool
-        """
 
-        #return -1   #Return this if there is no conflicted state
-        raiseNotDefined()
+        return -1   #Return this if there is no conflicted state
 
     def isGoalState(self, state):
         """Returns true if goal is acheived"""
 
-        raiseNotDefined()
+        for i in range(self.size):
+            if self.numConflicts(state, i) > 0:
+                return False
 
+        return True
 
-    def getValue(self, state, var):
+    def getValue(self, state, var, debug=False):
         """ Find the Least Conflicted value of var"""
 
         conflicts = {}
-        newState = state
+        newState = list(state)
         
-        """CONSTRUCT CODE HERE
         #For all possible values of var, find the number of conflicts that happen with it.
-        for val in AllPossibleValueDomain:
+        for val in range(self.size):
             newState[var] = val
-            conflicts[val] = numConflicts(self, newState, var)
-        """
+            conflicts[val] = self.numConflicts(newState, var)
         
         #Find the minimum conflict values
-        minConflicts = conflicts[min(conflicts, key=conflicts.get)]
+        minConflictVal = conflicts[min(conflicts, key=conflicts.get)]
 
         #If there are more than one value, with same minimum number, we need to break the tie randomly, or code might get stuck in wrong solution
-        allMinVal = [val for val, numConflict in conflicts.items() if numConflict == 1]
-        minVal = random.choice(allMinVal)
+        allMinVal = [val for val,numConflicts in conflicts.items() if numConflicts == minConflictVal]
+        minVal = choice(allMinVal)
 
-        return minVal
+        if debug:
+            return minVal, conflicts.items()
+        else:
+            return minVal
 
+    def visualize(self, state):
+        print '_' * self.size * 4
+        for i in range(self.size):
+            print '|' + '___|' * state[i] + '_x_|' + '___|' * (self.size-state[i]-1)
+        print ''
 
 class sudoku:
     """This class contains member functions which describe the empty sudoko board"""
@@ -152,7 +156,7 @@ class sudoku:
                 position = (x, y)
                 if position not in fixedPos:
                     self.valDomain[position] = applyUnaryConstraints(position)
-                    newVal = random.choice(self.valDomain[position])
+                    newVal = choice(self.valDomain[position])
                     self.board[x][y] = newVal
 
         return self.board
@@ -177,8 +181,8 @@ class sudoku:
         yRange = [a for a in range(N)]
 
         while True:
-            x = random.choice(xRange)
-            y = random.choice(yRange)
+            x = choice(xRange)
+            y = choice(yRange)
             position = (x, y)
 
             if position in fixedPos:
@@ -239,11 +243,9 @@ def raiseNotDefined():
 ###########################################
 
 
-#prob = NQueensProblem(3)
+prob = NQueensProblem(4, [1,2,0,1])    # no solution for < 4
 #prob = sudoku()
 
-"""
 state = prob.getStartState()
 print "State", state, " Is Goal", prob.isGoalState(state)
-solveAgent.minConflict(prob)
-"""
+print solveAgent.minConflict(prob, debugPrint=True)

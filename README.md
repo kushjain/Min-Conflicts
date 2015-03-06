@@ -24,6 +24,14 @@ All algorithms could be found in solveagents.py
 
 ### Progress
 
+6 March
+* Merged the Nqueens Problem Board
+* Started a new branch to test different starting heuristics for Nqueens
+
+5 March
+* Added Basic Debugging commands
+* Started working on NQueens
+
 4 March
 * Wrote Skeleton Frameworks for Problems : NQueens, Sudoku.
 * Wrote Min Conflicts Algorithms.

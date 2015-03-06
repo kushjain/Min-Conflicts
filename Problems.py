@@ -41,17 +41,23 @@ class NQueensProblem:
     def numConflicts(self, state, var):
         """ Find the number of conflicts in given state with respect to given variable"""
 
-        res = 0
-        for i in range(self.size):
-            if i != var and (state[i] == state[var] or abs(i-var) == abs(state[i]-state[var])):
-                res = res+1
-        return res
+        # same column or on same diagonal i.e. abs(x1-x2) == abs(y1-y2)
+        #  Illustration for diagonal:
+        #     1   2   3
+        # 1 |   |   | x |<------|
+        # 2 |   |   |   |       |-- x=(1,3)
+        # 3 | y |   |   |               |-> abs(1-3) == abs(3-1) == 2
+        #     ^                 |-- y=(3,1)
+        #     L-----------------|
+        return len([True for i in range(self.size) if i != var and (state[i] == state[var] or abs(i-var) == abs(state[i]-state[var]))])
 
     def getVar(self, state):
         """Return randomly any conflicted state"""
        
+        # randomly sample the states
         varPool = sample(range(self.size), self.size)
 
+        # iterate over the pool and return the first conflicted state
         while varPool:
             var = varPool.pop()
             if self.numConflicts(state, var) > 0:
@@ -62,6 +68,7 @@ class NQueensProblem:
     def isGoalState(self, state):
         """Returns true if goal is acheived"""
 
+        # goal state is reached iff there are no conflicted states
         for i in range(self.size):
             if self.numConflicts(state, i) > 0:
                 return False
@@ -87,11 +94,14 @@ class NQueensProblem:
         minVal = choice(allMinVal)
 
         if debug:
+            # return the whole list
             return minVal, conflicts.items()
         else:
             return minVal
 
     def visualize(self, state):
+        """Visualize the current state using ASCII-art of the board"""
+
         print '_' * self.size * 4
         for i in range(self.size):
             print '|' + '___|' * state[i] + '_x_|' + '___|' * (self.size-state[i]-1)
@@ -242,10 +252,23 @@ def raiseNotDefined():
     #TESTING
 ###########################################
 
+# run with '-h' for 'usage'
+import argparse
 
-prob = NQueensProblem(4, [1,2,0,1])    # no solution for < 4
-#prob = sudoku()
+parser = argparse.ArgumentParser()
+parser.add_argument("-p", choices=['NQueens', 'sudoku'], default='NQueens', help="type of problem")
+parser.add_argument("-n", type=int, default=8, help="size of problem")
+args = parser.parse_args()
+
+# can be improved?
+if args.p == "NQueens":
+    prob = NQueensProblem(args.n)    # no solution for < 4
+    print 'NQueens: n =', args.n
+elif args.p == "sudoku":
+    raiseNotDefined()
+    prob = sudoku()
+    print 'sudoku: n =', args.n   # 'n' irrelevant?
 
 state = prob.getStartState()
 print "State", state, " Is Goal", prob.isGoalState(state)
-print solveAgent.minConflict(prob, debugPrint=True)
+print solveAgent.minConflict(prob, debugPrint=False)

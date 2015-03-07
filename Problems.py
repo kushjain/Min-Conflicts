@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 import inspect
 import sys
-from random import random,sample,choice
+from random import random,sample,choice, shuffle
 import solveAgent
 
 
@@ -10,10 +10,8 @@ import solveAgent
 
 """CODE STILL TO CONSTRUCT
 class NQueensProblem
-    getVar - finding a conflicted variable and returning it
-    numConflicts: Full Function
-    getValue : Finding Possible domain of Values
-    isGoalState : FInd if given state is goal state or Not
+    isGoalState: We are basically calling getVar() function again. Merge the functions for redundancy purposes?
+    minVal: Choose a different value if possible if the current value is in least-conflicted mode.
 
 
 class sudoku
@@ -27,15 +25,20 @@ class NQueensProblem:
     Rules for Queens are standard chess. If the queens are places in a same row, same column or diagonal, they are said to attack each other.
     Thus, we have to place qeach queen in unique row, column and diagonal. """
 
-    def __init__(self, N, debugState=[]):
+    def __init__(self, N):
+
         self.size = N
-        if debugState:
-            self.board = debugState
-        else:
-            self.board = [int(random()*self.size) for x in range(self.size)]     #We are only making one dimensional array as opposed to matrix and enforcing different row constraint here itself.
+        self.valDomain = [x for x in range(self.size)]                      #The Value domain from which variables can take value
+        self.board = [-1 for x in range(self.size)]     #We are only making one dimensional array as opposed to matrix and enforcing different row constraint here itself.
 
     def getStartState(self):
-        """We have done random assignments. However, a greedy assignments may be used to improve performance"""
+        """We have done random assignments, (somewhat greedily). However, a greedy assignments may be used to improve performance"""
+
+        #Forcing Column Constraint randomly
+        domain = [x for x in range(self.size)]
+        shuffle(domain)
+        self.board = domain
+        
         return self.board
 
     def numConflicts(self, state, var):
@@ -49,6 +52,7 @@ class NQueensProblem:
         # 3 | y |   |   |               |-> abs(1-3) == abs(3-1) == 2
         #     ^                 |-- y=(3,1)
         #     L-----------------|
+        
         return len([True for i in range(self.size) if i != var and (state[i] == state[var] or abs(i-var) == abs(state[i]-state[var]))])
 
     def getVar(self, state):
@@ -57,7 +61,7 @@ class NQueensProblem:
         # randomly sample the states
         varPool = sample(range(self.size), self.size)
 
-        # iterate over the pool and return the first conflicted state
+        # Iterate over the pool and return the first conflicted state
         while varPool:
             var = varPool.pop()
             if self.numConflicts(state, var) > 0:
@@ -65,39 +69,34 @@ class NQueensProblem:
 
         return -1   #Return this if there is no conflicted state
 
-    def isGoalState(self, state):
-        """Returns true if goal is acheived"""
 
-        # goal state is reached iff there are no conflicted states
-        for i in range(self.size):
-            if self.numConflicts(state, i) > 0:
-                return False
-
-        return True
-
-    def getValue(self, state, var, debug=False):
+    def getValue(self, state, var):
         """ Find the Least Conflicted value of var"""
 
         conflicts = {}
         newState = list(state)
+        currConflicts = self.numConflicts(state, var)
         
         #For all possible values of var, find the number of conflicts that happen with it.
-        for val in range(self.size):
+        for val in self.valDomain:
             newState[var] = val
             conflicts[val] = self.numConflicts(newState, var)
         
         #Find the minimum conflict values
-        minConflictVal = conflicts[min(conflicts, key=conflicts.get)]
+        minConflictVal = conflicts[min(conflicts, key=conflicts.get)]   #Sort the conflicts by values
 
         #If there are more than one value, with same minimum number, we need to break the tie randomly, or code might get stuck in wrong solution
         allMinVal = [val for val,numConflicts in conflicts.items() if numConflicts == minConflictVal]
+
+        #Do the quick check to see if we are returning same value, and if possible, choose another value.
+        if currConflicts == minConflictVal and len(allMinVal) != 1:
+            allMinVal.remove(state[var])
+        
         minVal = choice(allMinVal)
 
-        if debug:
-            # return the whole list
-            return minVal, conflicts.items()
-        else:
-            return minVal
+
+        return minVal
+    
 
     def visualize(self, state):
         """Visualize the current state using ASCII-art of the board"""
@@ -257,7 +256,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", choices=['NQueens', 'sudoku'], default='NQueens', help="type of problem")
-parser.add_argument("-n", type=int, default=8, help="size of problem")
+parser.add_argument("-n", type=int, default=4, help="size of problem")
 args = parser.parse_args()
 
 # can be improved?
@@ -270,5 +269,4 @@ elif args.p == "sudoku":
     print 'sudoku: n =', args.n   # 'n' irrelevant?
 
 state = prob.getStartState()
-print "State", state, " Is Goal", prob.isGoalState(state)
-print solveAgent.minConflict(prob, debugPrint=False)
+print solveAgent.minConflict(prob)

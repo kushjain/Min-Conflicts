@@ -1,6 +1,6 @@
 """This file contains different Solving Agents for CSP Problems """
 
-def minConflict(problem, numIter=1000, debugPrint=False):
+def minConflict(problem, numIter=1000):
     """Min Conflict : Solves Constraint Satisfaction Problems.
     Given a possible assignment of all variables in CSP, it re-assigns all variables iteratively untill all contraints are satisfied
     INPUTS:
@@ -8,30 +8,25 @@ def minConflict(problem, numIter=1000, debugPrint=False):
     numIter: Number of maximum Iterations Allowed
     OUTPUT
     Solution to CSP, or failure
-
-    TODO: Remove debugPrint after testing
     """
 
     state = problem.getStartState()
+    #print "Initial State"
+    #problem.visualize(state)
 
     for i in range(numIter):
+        
+        var = problem.getVar(state)      #Get the next conflicted variable randomly
 
-        if debugPrint:
-            print 'Iter #',i
+        #No conflict, i.e. We have solved the problem
+        if var == -1:
+            print "Solution state found in", i, "iterations"
             problem.visualize(state)
-
-        if problem.isGoalState(state):
             return state
         
-        var = problem.getVar(state)      #Get the variable which will be re-assigned
-
-        if debugPrint:
-            val, valList = problem.getValue(state, var, debug=True)
-            print 'var:',var,'val:',val,'valList:', valList
-            print ''
-        else:
-            val = problem.getValue(state, var)      #Get the value which will be assigned. Value should be chosen such that it causes least conflicts. Ties are broken randomly
+        val = problem.getValue(state, var)      #Get the value which will be assigned. Value should be chosen such that it causes least conflicts. Ties are broken randomly
         state[var] = val
 
-
+    
+    print "Solution not found! Try with high iterations"
     return []

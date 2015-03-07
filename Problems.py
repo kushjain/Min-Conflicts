@@ -4,6 +4,20 @@ import sys
 from random import random,sample,choice, shuffle
 import solveAgent
 
+class bcolors:
+    """
+    Produce colorful outputs
+    usage:
+            print bcolors.BOLD + 'BOLD' + 'bcolors.ENDC
+    """
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 ##########################################################
 """This file includes problem definitons"""
@@ -115,7 +129,10 @@ class sudoku:
     def __init__(self, N = 9, predefinedValues=()):
         """Initializes sudoku board. Values describe the predefined values in board: It is set containing tuples (position, value)"""
         
-        # TODO check board dimensions
+        # board size must be n^2 for some n
+        if int(N**0.5)**2 != N:
+            raise Exception('sudoku: Illegal board size')
+
         self.size = N
 
         #Initialize the board positions
@@ -171,40 +188,35 @@ class sudoku:
     def getVar(self, state):
         """Returns randomnly selected conflicted variable"""
 
-        xRange = [a for a in range(self.size)]
-        yRange = [a for a in range(self.size)]
+        Range = [(a,b) for a in range(self.size) for b in range(self.size)]
 
-        while xRange and yRange:
-            x = choice(xRange)
-            y = choice(yRange)
-            position = (x, y)
+        while Range:
+            position = choice(Range)
 
             if position in self.fixedPos:
-                xRange.remove(x)
-                yRange.remove(y)
+                Range.remove(position)
                 continue
                 
             if self.isConflicted(state, position):
                 return position
                 break
             else:
-                xRange.remove(x)
-                yRange.remove(y)
+                Range.remove(position)
 
         return -1
 
     def numConflicts(self, state, position):
         """Returns the number of conflicts in given state with respect to given Position"""
 
-        result = 0
         x, y = position
         val = state[x][y]
-        result = [True for i in range(self.size) if (i != y and state[x][i] == val) or (i != x and state[i][y] == val)]
+        result = [(x,i) for i in range(self.size) if (i != y and state[x][i] == val)]
+        result.extend([(i,y) for i in range(self.size) if (i != x and state[i][y] == val)])
 
         region = self.region(position)
-        start = int(region[0]*(self.size**0.5))
-        stop = start + int(self.size**0.5)
-        result.extend([True for i in range(start,stop) for j in range(start,stop) if (i,j) != position and state[i][j] == val])
+        start = region[0]*int(self.size**0.5), region[1]*int(self.size**0.5)
+        stop = start[0] + int(self.size**0.5), start[1] + int(self.size**0.5)
+        result.extend([(i,j) for i in range(start[0],stop[0]) for j in range(start[1],stop[1]) if (i,j) != position and state[i][j] == val])
 
         return len(result)
 
@@ -237,11 +249,18 @@ class sudoku:
     def visualize(self, state):
         """Visualize the current state using ASCII-art of the board"""
 
+        n = int(self.size**0.5)
+        pattern = (bcolors.OKGREEN, bcolors.OKBLUE)
         print '_' * self.size * 4
         for i in range(self.size):
-            print '|',
+            print bcolors.WARNING + '|' + bcolors.ENDC,
             for j in range(self.size):
-                print state[i][j], '|',
+                if (i,j) in self.fixedPos:
+                    print bcolors.UNDERLINE + bcolors.BOLD + str(state[i][j]) + bcolors.ENDC,
+                else:
+                    switch = (reduce(lambda rst, d: rst * n + d, self.region((i,j))))
+                    print pattern[switch%2] + str(state[i][j]) + bcolors.ENDC,
+                print bcolors.WARNING + '|' + bcolors.ENDC,
             print ''
         print ''
        

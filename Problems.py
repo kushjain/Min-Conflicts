@@ -96,7 +96,10 @@ class NQueensProblem:
 
 
         return minVal
-    
+
+    def updateBoard(self, state, var, val):
+        state[var] = val
+        return state
 
     def visualize(self, state):
         """Visualize the current state using ASCII-art of the board"""
@@ -112,6 +115,7 @@ class sudoku:
     def __init__(self, N = 9, predefinedValues=()):
         """Initializes sudoku board. Values describe the predefined values in board: It is set containing tuples (position, value)"""
         
+        # TODO check board dimensions
         self.size = N
 
         #Initialize the board positions
@@ -123,31 +127,28 @@ class sudoku:
 
         #Initialize the rest of board and assign domains to rest of positions
         self.valDomain = {}
-        for x in range(N):
-            for y in range(N):
+        for x in range(self.size):
+            for y in range(self.size):
                 pos = (x, y)
                 if pos not in self.fixedPos:
-                    self.valDomain[pos] = [x for x in range(1, N+1)]
-
+                    self.valDomain[pos] = [i for i in range(1, self.size+1)]
+        
+        self.region = lambda pos: (int(pos[0]/self.size**0.5), int(pos[1]/self.size**0.5))
 
     def applyUnaryConstraints(self, position):
         """Given a position, it takes the value and apply the Unary contraints with respect to fixed configuration of board"""
 
-        #domain = self.valDomain[position]
+        domain = self.valDomain[position]
         x, y = position
-        
-        """
-        for pos in self.fixedPos:
-            fixedX, fixedY = pos
-            for x in range(self.size):
-                val = self.board[x][fixedY]
-                if x != fixedX:
-                    domain[(x,fixedY)].delete(val)
-            for y in range(self.size):
-                val = self.board[fixedX][y]
-                if y != fixedY:
-                    domain[(fixedX,y)].delete(val)
-        """
+
+        for fixedX, fixedY in self.fixedPos:
+            if fixedX == x or fixedY == y or self.region((fixedX,fixedY)) == self.region(position):
+                val = self.board[fixedX][fixedY]
+                try:
+                    domain.remove(val)
+                except ValueError:  # 'remove' throws 'ValueError' if element not found
+                    pass
+        return domain
 
     def getStartState(self):
         """Initializes the board, and returns starting configuration"""
@@ -157,73 +158,81 @@ class sudoku:
                 position = (x, y)
                 if position not in self.fixedPos:
                     self.valDomain[position] = self.applyUnaryConstraints(position)
-                    print self.valDomain[position]
                     self.board[x][y] = choice(self.valDomain[position])
 
         return self.board
 
 
-    def isGoalState(self, state):
-        """Returns whether the current state is Goal"""
-
-        raiseNotDefined()
-
-
-    def iConflicted(self, state, position):
+    def isConflicted(self, state, position):
         """Tells whether given position is conflicted"""
 
-        raiseNotDefined()
-        
+        return self.numConflicts(state, position) > 0
 
     def getVar(self, state):
         """Returns randomnly selected conflicted variable"""
 
-        xRange = [a for a in range(N)]
-        yRange = [a for a in range(N)]
+        xRange = [a for a in range(self.size)]
+        yRange = [a for a in range(self.size)]
 
-        while True:
+        while xRange and yRange:
             x = choice(xRange)
             y = choice(yRange)
             position = (x, y)
 
-            if position in fixedPos:
-                """Remove x and y from xRange and yRange"""
+            if position in self.fixedPos:
+                xRange.remove(x)
+                yRange.remove(y)
                 continue
                 
-            if isConflicted(state, position):
-                pos = position
+            if self.isConflicted(state, position):
+                return position
                 break
             else:
-                """Remove x and y from xRange and yRange"""
+                xRange.remove(x)
+                yRange.remove(y)
 
-        #return pos
-        raiseNotDefined()
+        return -1
 
     def numConflicts(self, state, position):
         """Returns the number of conflicts in given state with respect to given Position"""
 
-        raiseNotDefined()
+        result = 0
+        x, y = position
+        val = state[x][y]
+        result = [True for i in range(self.size) if (i != y and state[x][i] == val) or (i != x and state[i][y] == val)]
 
+        region = self.region(position)
+        start = int(region[0]*(self.size**0.5))
+        stop = start + int(self.size**0.5)
+        result.extend([True for i in range(start,stop) for j in range(start,stop) if (i,j) != position and state[i][j] == val])
 
-    def getVal(self, state, var):
+        return len(result)
+
+    def getValue(self, state, var):
         """ Find the Least Conflicted value of var"""
 
         conflicts = {}
-        newState = state
+        newState = list(state)
+        currConflicts = self.numConflicts(state, var)
         
         #For all possible values of var, find the number of conflicts that happen with it.
         for val in self.valDomain[var]:
-            newState[var[0]][var[1]] = val
-            conflicts[val] = numConflicts(self, newState, var)
+            newState = self.updateBoard(state, var, val)
+            conflicts[val] = self.numConflicts(newState, var)
         
         #Find the minimum conflict values
-        minConflicts = conflicts[min(conflicts, key=conflicts.get)]
+        minConflictVal = conflicts[min(conflicts, key=conflicts.get)]   #Sort the conflicts by values
 
         #If there are more than one value, with same minimum number, we need to break the tie randomly, or code might get stuck in wrong solution
-        allMinVal = [val for val, numConflict in conflicts.items() if numConflict == 1]
-        minVal = int(random()*len(allMinVal))
+        allMinVal = [val for val,numConflicts in conflicts.items() if numConflicts == minConflictVal]
+
+        minVal = choice(allMinVal)
 
         return minVal
+
+    def updateBoard(self, state, var, val):
+        state[var[0]][var[1]] = val
+        return state
 
     def visualize(self, state):
         """Visualize the current state using ASCII-art of the board"""
@@ -232,8 +241,9 @@ class sudoku:
         for i in range(self.size):
             print '|',
             for j in range(self.size):
-                print state[i][j], ' |',
+                print state[i][j], '|',
             print ''
+        print ''
        
         
 #############################################

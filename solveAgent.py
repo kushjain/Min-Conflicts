@@ -1,6 +1,6 @@
 """This file contains different Solving Agents for CSP Problems """
 
-def minConflict(problem, numIter=1000):
+def minConflict(problem, numIter=100000):
     """Min Conflict : Solves Constraint Satisfaction Problems.
     Given a possible assignment of all variables in CSP, it re-assigns all variables iteratively untill all contraints are satisfied
     INPUTS:
@@ -25,8 +25,7 @@ def minConflict(problem, numIter=1000):
             return state
         
         val = problem.getValue(state, var)      #Get the value which will be assigned. Value should be chosen such that it causes least conflicts. Ties are broken randomly
-        state[var] = val
-
+        state = problem.updateBoard(state, var, val)
     
     print "Solution not found! Try with high iterations"
     return []

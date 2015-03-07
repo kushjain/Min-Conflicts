@@ -114,16 +114,12 @@ class sudoku:
         
         self.size = N
 
-
         #Initialize the board positions
         self.board = [[-1 for i in range(self.size)] for j in range(self.size)]
         self.fixedPos = set()
-        for item in predefinedValues:
-            pos = item[0]
-            value = item[1]
-            self.fixedPod.add(pos)
-            self.board[pos[0]][pos[1]] = value
-
+        for pos, val in predefinedValues:
+            self.fixedPos.add(pos)
+            self.board[pos[0]][pos[1]] = val
 
         #Initialize the rest of board and assign domains to rest of positions
         self.valDomain = {}
@@ -137,25 +133,21 @@ class sudoku:
     def applyUnaryConstraints(self, position):
         """Given a position, it takes the value and apply the Unary contraints with respect to fixed configuration of board"""
 
-        domain = self.valDomain[position]
+        #domain = self.valDomain[position]
         x, y = position
         
-        """Construct Code Here
-        for all x in self.fixedPos:
-            get fixedY
-            val = board[x][fixedY]
-            remove val from domain
-        for all y in self.fixedPos:
-            get fixedX
-            val = board[fixedX][y]
-            remove val from domain
-
-        REGION CODING
         """
-
-        #return domain
-        
-        raiseNotDefined()
+        for pos in self.fixedPos:
+            fixedX, fixedY = pos
+            for x in range(self.size):
+                val = self.board[x][fixedY]
+                if x != fixedX:
+                    domain[(x,fixedY)].delete(val)
+            for y in range(self.size):
+                val = self.board[fixedX][y]
+                if y != fixedY:
+                    domain[(fixedX,y)].delete(val)
+        """
 
     def getStartState(self):
         """Initializes the board, and returns starting configuration"""
@@ -163,10 +155,10 @@ class sudoku:
         for x in range(self.size):
             for y in range(self.size):
                 position = (x, y)
-                if position not in fixedPos:
-                    self.valDomain[position] = applyUnaryConstraints(position)
-                    newVal = choice(self.valDomain[position])
-                    self.board[x][y] = newVal
+                if position not in self.fixedPos:
+                    self.valDomain[position] = self.applyUnaryConstraints(position)
+                    print self.valDomain[position]
+                    self.board[x][y] = choice(self.valDomain[position])
 
         return self.board
 
@@ -232,7 +224,17 @@ class sudoku:
         minVal = int(random()*len(allMinVal))
 
         return minVal
-        
+
+    def visualize(self, state):
+        """Visualize the current state using ASCII-art of the board"""
+
+        print '_' * self.size * 4
+        for i in range(self.size):
+            print '|',
+            for j in range(self.size):
+                print state[i][j], ' |',
+            print ''
+       
         
 #############################################
 # HELPER FUNCTIONS
@@ -264,9 +266,8 @@ if args.p == "NQueens":
     prob = NQueensProblem(args.n)    # no solution for < 4
     print 'NQueens: n =', args.n
 elif args.p == "sudoku":
-    raiseNotDefined()
-    prob = sudoku()
+    prob = sudoku(N=args.n, predefinedValues=[((0,0), 4), ((1,1), 1), ((2,2), 2), ((3,3), 3)])
     print 'sudoku: n =', args.n   # 'n' irrelevant?
 
-state = prob.getStartState()
+#state = prob.getStartState()
 print solveAgent.minConflict(prob)

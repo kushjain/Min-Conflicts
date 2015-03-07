@@ -11,8 +11,8 @@ def minConflict(problem, numIter=1000):
     """
 
     state = problem.getStartState()
-    #print "Initial State"
-    #problem.visualize(state)
+    print "Initial State"
+    problem.visualize(state)
 
     for i in range(numIter):
         

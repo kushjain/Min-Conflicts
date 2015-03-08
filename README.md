@@ -10,7 +10,7 @@ Designed and Implemented by Kush Jain (https://github.com/kushjain) and Abhishek
 Currently we are focusing on :
 
 * NQueens : On a NxN chessboard, arrange the N queens in such a way that no queen threatens each other. Two queens are said to attack (or threat) each other if they lie in same column, row and diagonal
-* Sudoku : Currently solving for 9x9 board. Fill the numbers 1-9 such that each row and each column must have all numbers 1-9. Also , the board is divided into 9 3x3 regions, which alo must contain unique numbers.
+* Sudoku : Solves for N*N board
 
 All Problem Definitions could be found in problems.py file
 
@@ -24,9 +24,11 @@ All algorithms could be found in solveagents.py
 
 ### Progress
 
+8 March
+* Sudoku Board completed
+
 7 March
 * NQueens completely finished. 
-* Start work on Sudoku board
 
 4 March
 * Wrote Skeleton Frameworks for Problems : NQueens, Sudoku.
@@ -36,4 +38,4 @@ All algorithms could be found in solveagents.py
 
 * Code can get stuck in Local minima and return sub-optimal (or wrong) solution for now.
 * Instead of random initialization, greedy initialization may work better
-* Still have to completely define problems.
+* In Sudoku, visualize() might break depending on OS. Will revert to simple visualize

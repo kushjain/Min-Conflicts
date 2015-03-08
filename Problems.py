@@ -158,7 +158,9 @@ class sudoku:
         domain = self.valDomain[position]
         x, y = position
 
+        # iterate over each fixed point
         for fixedX, fixedY in self.fixedPos:
+            # check if in same column or row or region
             if fixedX == x or fixedY == y or self.region((fixedX,fixedY)) == self.region(position):
                 val = self.board[fixedX][fixedY]
                 try:
@@ -174,6 +176,7 @@ class sudoku:
             for y in range(self.size):
                 position = (x, y)
                 if position not in self.fixedPos:
+                    # adjust the domain according to fixed values
                     self.valDomain[position] = self.applyUnaryConstraints(position)
                     self.board[x][y] = choice(self.valDomain[position])
 
@@ -210,13 +213,16 @@ class sudoku:
 
         x, y = position
         val = state[x][y]
-        result = [(x,i) for i in range(self.size) if (i != y and state[x][i] == val)]
-        result.extend([(i,y) for i in range(self.size) if (i != x and state[i][y] == val)])
+        # same row
+        result = [True for i in range(self.size) if (i != y and state[x][i] == val)]
+        # same column
+        result.extend([True for i in range(self.size) if (i != x and state[i][y] == val)])
 
+        # same region
         region = self.region(position)
         start = region[0]*int(self.size**0.5), region[1]*int(self.size**0.5)
         stop = start[0] + int(self.size**0.5), start[1] + int(self.size**0.5)
-        result.extend([(i,j) for i in range(start[0],stop[0]) for j in range(start[1],stop[1]) if (i,j) != position and state[i][j] == val])
+        result.extend([True for i in range(start[0],stop[0]) for j in range(start[1],stop[1]) if (i,j) != position and state[i][j] == val])
 
         return len(result)
 
@@ -249,6 +255,7 @@ class sudoku:
     def visualize(self, state):
         """Visualize the current state using ASCII-art of the board"""
 
+        # no comment needed ;)
         n = int(self.size**0.5)
         pattern = (bcolors.OKGREEN, bcolors.OKBLUE)
         print '_' * self.size * 4

@@ -4,6 +4,20 @@ import sys
 from random import random,sample,choice, shuffle
 import solveAgent
 
+class bcolors:
+    """
+    Produce colorful outputs
+    usage:
+            print bcolors.BOLD + 'BOLD' + 'bcolors.ENDC
+    """
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 ##########################################################
 """This file includes problem definitons"""
@@ -96,7 +110,10 @@ class NQueensProblem:
 
 
         return minVal
-    
+
+    def updateBoard(self, state, var, val):
+        state[var] = val
+        return state
 
     def visualize(self, state):
         """Visualize the current state using ASCII-art of the board"""
@@ -112,50 +129,45 @@ class sudoku:
     def __init__(self, N = 9, predefinedValues=()):
         """Initializes sudoku board. Values describe the predefined values in board: It is set containing tuples (position, value)"""
         
-        self.size = N
+        # board size must be n^2 for some n
+        if int(N**0.5)**2 != N:
+            raise Exception('sudoku: Illegal board size')
 
+        self.size = N
 
         #Initialize the board positions
         self.board = [[-1 for i in range(self.size)] for j in range(self.size)]
         self.fixedPos = set()
-        for item in predefinedValues:
-            pos = item[0]
-            value = item[1]
-            self.fixedPod.add(pos)
-            self.board[pos[0]][pos[1]] = value
-
+        for pos, val in predefinedValues:
+            self.fixedPos.add(pos)
+            self.board[pos[0]][pos[1]] = val
 
         #Initialize the rest of board and assign domains to rest of positions
         self.valDomain = {}
-        for x in range(N):
-            for y in range(N):
+        for x in range(self.size):
+            for y in range(self.size):
                 pos = (x, y)
                 if pos not in self.fixedPos:
-                    self.valDomain[pos] = [x for x in range(1, N+1)]
-
+                    self.valDomain[pos] = [i for i in range(1, self.size+1)]
+        
+        self.region = lambda pos: (int(pos[0]/self.size**0.5), int(pos[1]/self.size**0.5))
 
     def applyUnaryConstraints(self, position):
         """Given a position, it takes the value and apply the Unary contraints with respect to fixed configuration of board"""
 
         domain = self.valDomain[position]
         x, y = position
-        
-        """Construct Code Here
-        for all x in self.fixedPos:
-            get fixedY
-            val = board[x][fixedY]
-            remove val from domain
-        for all y in self.fixedPos:
-            get fixedX
-            val = board[fixedX][y]
-            remove val from domain
 
-        REGION CODING
-        """
-
-        #return domain
-        
-        raiseNotDefined()
+        # iterate over each fixed point
+        for fixedX, fixedY in self.fixedPos:
+            # check if in same column or row or region
+            if fixedX == x or fixedY == y or self.region((fixedX,fixedY)) == self.region(position):
+                val = self.board[fixedX][fixedY]
+                try:
+                    domain.remove(val)
+                except ValueError:  # 'remove' throws 'ValueError' if element not found
+                    pass
+        return domain
 
     def getStartState(self):
         """Initializes the board, and returns starting configuration"""
@@ -163,76 +175,102 @@ class sudoku:
         for x in range(self.size):
             for y in range(self.size):
                 position = (x, y)
-                if position not in fixedPos:
-                    self.valDomain[position] = applyUnaryConstraints(position)
-                    newVal = choice(self.valDomain[position])
-                    self.board[x][y] = newVal
+                if position not in self.fixedPos:
+                    # adjust the domain according to fixed values
+                    self.valDomain[position] = self.applyUnaryConstraints(position)
+                    self.board[x][y] = choice(self.valDomain[position])
 
         return self.board
 
 
-    def isGoalState(self, state):
-        """Returns whether the current state is Goal"""
-
-        raiseNotDefined()
-
-
-    def iConflicted(self, state, position):
+    def isConflicted(self, state, position):
         """Tells whether given position is conflicted"""
 
-        raiseNotDefined()
-        
+        return self.numConflicts(state, position) > 0
 
     def getVar(self, state):
         """Returns randomnly selected conflicted variable"""
 
-        xRange = [a for a in range(N)]
-        yRange = [a for a in range(N)]
+        Range = [(a,b) for a in range(self.size) for b in range(self.size)]
 
-        while True:
-            x = choice(xRange)
-            y = choice(yRange)
-            position = (x, y)
+        while Range:
+            position = choice(Range)
 
-            if position in fixedPos:
-                """Remove x and y from xRange and yRange"""
+            if position in self.fixedPos:
+                Range.remove(position)
                 continue
                 
-            if isConflicted(state, position):
-                pos = position
+            if self.isConflicted(state, position):
+                return position
                 break
             else:
-                """Remove x and y from xRange and yRange"""
+                Range.remove(position)
 
-        #return pos
-        raiseNotDefined()
+        return -1
 
     def numConflicts(self, state, position):
         """Returns the number of conflicts in given state with respect to given Position"""
 
-        raiseNotDefined()
+        x, y = position
+        val = state[x][y]
+        # same row
+        result = [True for i in range(self.size) if (i != y and state[x][i] == val)]
+        # same column
+        result.extend([True for i in range(self.size) if (i != x and state[i][y] == val)])
 
+        # same region
+        region = self.region(position)
+        start = region[0]*int(self.size**0.5), region[1]*int(self.size**0.5)
+        stop = start[0] + int(self.size**0.5), start[1] + int(self.size**0.5)
+        result.extend([True for i in range(start[0],stop[0]) for j in range(start[1],stop[1]) if (i,j) != position and state[i][j] == val])
 
-    def getVal(self, state, var):
+        return len(result)
+
+    def getValue(self, state, var):
         """ Find the Least Conflicted value of var"""
 
         conflicts = {}
-        newState = state
+        newState = list(state)
+        currConflicts = self.numConflicts(state, var)
         
         #For all possible values of var, find the number of conflicts that happen with it.
         for val in self.valDomain[var]:
-            newState[var[0]][var[1]] = val
-            conflicts[val] = numConflicts(self, newState, var)
+            newState = self.updateBoard(state, var, val)
+            conflicts[val] = self.numConflicts(newState, var)
         
         #Find the minimum conflict values
-        minConflicts = conflicts[min(conflicts, key=conflicts.get)]
+        minConflictVal = conflicts[min(conflicts, key=conflicts.get)]   #Sort the conflicts by values
 
         #If there are more than one value, with same minimum number, we need to break the tie randomly, or code might get stuck in wrong solution
-        allMinVal = [val for val, numConflict in conflicts.items() if numConflict == 1]
-        minVal = int(random()*len(allMinVal))
+        allMinVal = [val for val,numConflicts in conflicts.items() if numConflicts == minConflictVal]
+
+        minVal = choice(allMinVal)
 
         return minVal
-        
+
+    def updateBoard(self, state, var, val):
+        state[var[0]][var[1]] = val
+        return state
+
+    def visualize(self, state):
+        """Visualize the current state using ASCII-art of the board"""
+
+        # no comment needed ;)
+        n = int(self.size**0.5)
+        pattern = (bcolors.OKGREEN, bcolors.OKBLUE)
+        print '_' * self.size * 4
+        for i in range(self.size):
+            print bcolors.WARNING + '|' + bcolors.ENDC,
+            for j in range(self.size):
+                if (i,j) in self.fixedPos:
+                    print bcolors.UNDERLINE + bcolors.BOLD + str(state[i][j]) + bcolors.ENDC,
+                else:
+                    switch = (reduce(lambda rst, d: rst * n + d, self.region((i,j))))
+                    print pattern[switch%2] + str(state[i][j]) + bcolors.ENDC,
+                print bcolors.WARNING + '|' + bcolors.ENDC,
+            print ''
+        print ''
+       
         
 #############################################
 # HELPER FUNCTIONS
@@ -257,16 +295,21 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", choices=['NQueens', 'sudoku'], default='NQueens', help="type of problem")
 parser.add_argument("-n", type=int, default=4, help="size of problem")
+parser.add_argument("-i", dest='input', default=[], help="initial input configuration for sudoku; syntax: x1 y1 val1 x2 y2 val2 ..", nargs='+')
 args = parser.parse_args()
+
+values = args.input
+predefValues = []
+for i in range(0,len(values),3):
+    predefValues.append(((int(values[i]),int(values[i+1])),int(values[i+2])))
 
 # can be improved?
 if args.p == "NQueens":
     prob = NQueensProblem(args.n)    # no solution for < 4
     print 'NQueens: n =', args.n
 elif args.p == "sudoku":
-    raiseNotDefined()
-    prob = sudoku()
+    prob = sudoku(N=args.n, predefinedValues=predefValues)
     print 'sudoku: n =', args.n   # 'n' irrelevant?
 
-state = prob.getStartState()
+#state = prob.getStartState()
 print solveAgent.minConflict(prob)

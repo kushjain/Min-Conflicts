@@ -31,3 +31,17 @@ def raiseNotDefined():
 
     print "*** Method not implemented: %s at line %s of %s" % (method, line, fileName)
     sys.exit(0)
+
+def readConfigFile(fname):
+    """
+    read a sudoku input config file and return the encoded list of values
+    return value format: (x-pos, y-pos, val)
+    """
+    i = 0
+    result = []
+    with open(fname, 'r') as fin:
+        for line in fin:
+            result.extend([((i, j), int(x)) for j,x in enumerate(line) if str.isdigit(x)])
+            i = i+1
+    return result
+

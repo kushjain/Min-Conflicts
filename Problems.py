@@ -2,6 +2,7 @@
 from random import random,sample,choice, shuffle
 import solveAgent
 import util
+import os   # for detecting *nix
 
 """This file includes problem definitons"""
 
@@ -255,6 +256,10 @@ class sudoku:
 
     def visualize(self, state):
         """Visualize the current state using ASCII-art of the board"""
+        
+        if os.name == 'posix':
+            self.unix_visualize(state)
+            return
 
         print '_' * self.size * 4
 
@@ -278,22 +283,15 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", choices=['NQueens', 'sudoku'], default='NQueens', help="type of problem")
 parser.add_argument("-n", type=int, default=4, help="size of problem")
-#parser.add_argument("-i", dest='input', default=[], help="initial input configuration for sudoku; syntax: x1 y1 val1 x2 y2 val2 ..", nargs='+')
+parser.add_argument("-i", default='test', help="file containing the initial input configuration for sudoku")
 args = parser.parse_args()
 
-"""
-values = args.input
-predefValues = []
-for i in range(0,len(values),3):
-    predefValues.append(((int(values[i]),int(values[i+1])),int(values[i+2])))
-"""
-
-predefValues = [((0, 0), 4), ((1, 1), 3), ((2, 2), 2), ((3, 3), 1), ((1, 2), 1), ((2, 1), 4)]
 
 if args.p == "NQueens":
     prob = NQueensProblem(args.n)    # no solution for < 4
     print 'NQueens: n =', args.n
 elif args.p == "sudoku":
+    predefValues = util.readConfigFile(args.i)
     prob = sudoku(N=args.n, predefinedValues=predefValues)
     print 'sudoku: n =', args.n
 

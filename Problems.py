@@ -1,37 +1,14 @@
 #!/usr/bin/python2
-import inspect
-import sys
 from random import random,sample,choice, shuffle
 import solveAgent
+import util
 
-class bcolors:
-    """
-    Produce colorful outputs
-    usage:
-            print bcolors.BOLD + 'BOLD' + 'bcolors.ENDC
-    """
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
-##########################################################
 """This file includes problem definitons"""
 
-"""CODE STILL TO CONSTRUCT
-class NQueensProblem
-    isGoalState: We are basically calling getVar() function again. Merge the functions for redundancy purposes?
-    minVal: Choose a different value if possible if the current value is in least-conflicted mode.
 
-
-class sudoku
-    All functions needed to be filled.
-"""
-#########################################################
+##########################################################
+#NQueens
+##########################################################
 
 
 class NQueensProblem:
@@ -123,6 +100,10 @@ class NQueensProblem:
             print '|' + '___|' * state[i] + '_x_|' + '___|' * (self.size-state[i]-1)
         print ''
 
+##########################################################
+#NQueens
+##########################################################
+        
 class sudoku:
     """This class contains member functions which describe the empty sudoko board"""
 
@@ -252,37 +233,39 @@ class sudoku:
         state[var[0]][var[1]] = val
         return state
 
-    def visualize(self, state):
+    def unix_visualize(self, state):
         """Visualize the current state using ASCII-art of the board"""
+        #works only on *nix system
 
         # no comment needed ;)
         n = int(self.size**0.5)
-        pattern = (bcolors.OKGREEN, bcolors.OKBLUE)
+        pattern = (util.bcolors.OKGREEN, util.bcolors.OKBLUE)
         print '_' * self.size * 4
         for i in range(self.size):
-            print bcolors.WARNING + '|' + bcolors.ENDC,
+            print util.bcolors.WARNING + '|' + util.bcolors.ENDC,
             for j in range(self.size):
                 if (i,j) in self.fixedPos:
-                    print bcolors.UNDERLINE + bcolors.BOLD + str(state[i][j]) + bcolors.ENDC,
+                    print util.bcolors.UNDERLINE + util.bcolors.BOLD + str(state[i][j]) + util.bcolors.ENDC,
                 else:
                     switch = (reduce(lambda rst, d: rst * n + d, self.region((i,j))))
-                    print pattern[switch%2] + str(state[i][j]) + bcolors.ENDC,
-                print bcolors.WARNING + '|' + bcolors.ENDC,
+                    print pattern[switch%2] + str(state[i][j]) + util.bcolors.ENDC,
+                print util.bcolors.WARNING + '|' + util.bcolors.ENDC,
             print ''
         print ''
-       
+
+    def visualize(self, state):
+        """Visualize the current state using ASCII-art of the board"""
+
+        print '_' * self.size * 4
+
+        for i in range(self.size):
+            print '|', 
+            for j in range(self.size):
+                print state[i][j], '|', 
+            print '' 
+        print ''
         
-#############################################
-# HELPER FUNCTIONS
-#############################################
-
-def raiseNotDefined():
-    fileName = inspect.stack()[1][1]
-    line = inspect.stack()[1][2]
-    method = inspect.stack()[1][3]
-
-    print "*** Method not implemented: %s at line %s of %s" % (method, line, fileName)
-    sys.exit(0)
+        #util.raiseNotDefined()
 
 
 ############################################
@@ -295,21 +278,24 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", choices=['NQueens', 'sudoku'], default='NQueens', help="type of problem")
 parser.add_argument("-n", type=int, default=4, help="size of problem")
-parser.add_argument("-i", dest='input', default=[], help="initial input configuration for sudoku; syntax: x1 y1 val1 x2 y2 val2 ..", nargs='+')
+#parser.add_argument("-i", dest='input', default=[], help="initial input configuration for sudoku; syntax: x1 y1 val1 x2 y2 val2 ..", nargs='+')
 args = parser.parse_args()
 
+"""
 values = args.input
 predefValues = []
 for i in range(0,len(values),3):
     predefValues.append(((int(values[i]),int(values[i+1])),int(values[i+2])))
+"""
 
-# can be improved?
+predefValues = [((0, 0), 4), ((1, 1), 3), ((2, 2), 2), ((3, 3), 1), ((1, 2), 1), ((2, 1), 4)]
+
 if args.p == "NQueens":
     prob = NQueensProblem(args.n)    # no solution for < 4
     print 'NQueens: n =', args.n
 elif args.p == "sudoku":
     prob = sudoku(N=args.n, predefinedValues=predefValues)
-    print 'sudoku: n =', args.n   # 'n' irrelevant?
+    print 'sudoku: n =', args.n
 
 #state = prob.getStartState()
 print solveAgent.minConflict(prob)

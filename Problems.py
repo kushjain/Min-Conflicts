@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python2
 from random import random,sample,choice, shuffle
 import solveAgent
 import util
@@ -288,12 +288,14 @@ args = parser.parse_args()
 
 
 if args.p == "NQueens":
-    prob = NQueensProblem(args.n)    # no solution for < 4
+    prob = [NQueensProblem(args.n)]    # no solution for < 4
     print 'NQueens: n =', args.n
 elif args.p == "sudoku":
     predefValues = util.readConfigFile(args.i)
-    prob = sudoku(N=args.n, predefinedValues=predefValues)
+    prob = [sudoku(N=args.n, predefinedValues=val) for val in predefValues]
     print 'sudoku: n =', args.n
 
 #state = prob.getStartState()
-print solveAgent.minConflict(prob)
+
+for p in prob:
+    print solveAgent.minConflict(p)

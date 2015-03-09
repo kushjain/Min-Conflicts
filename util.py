@@ -2,8 +2,6 @@
 import inspect
 import sys
 
-
-
 class bcolors:
     """
     Produce colorful outputs
@@ -32,10 +30,29 @@ def raiseNotDefined():
     print "*** Method not implemented: %s at line %s of %s" % (method, line, fileName)
     sys.exit(0)
 
-def readConfigFile(fname):
+
+def readConfigFile(fname, N):
     """
-    read a sudoku input config file and return the encoded list of values
-    return value format: (x-pos, y-pos, val)
+    Choose which readConfig File to call. One deals where each row input is on different line and another deals when whole puzzle is on single line
+    """"
+
+    #Can we merge two functions together?
+    
+    with open(fname, 'r') as fin:
+        #Easier way to access single line?
+        for line in fin:
+            if len(line) > N:
+                result = readConfigFile_same(fname, N)
+                break
+            else:
+                result = readConfigFile_different(fname)
+        return result
+
+
+def readConfigFile_different(fname):
+    """
+    read a sudoku input config file : Each row is in different line
+    return value format: ((x-pos, y-pos), val)
     """
     i = 0
     result = []
@@ -45,3 +62,23 @@ def readConfigFile(fname):
             i = i+1
     return result
 
+def readConfigFile_same(fname, N):
+    """
+    read a sudoku input config file : Complete puzzle is on same line
+    return value format: ((x-pos, y-pos), val)
+    """
+    i = 0
+    result = []
+    with open(fname, 'r') as fin:
+
+        #Improve it. There must be easier way to access a single line from file.
+        for line in fin:
+            puzzle = line
+            break
+        
+        while i<N:
+            row = puzzle[i*N:i*N+N+1]
+            result.extend([((i, j), int(k)) for j, k in enumerate(row) if str.isdigit(k)])
+            i += 1
+            
+    return result

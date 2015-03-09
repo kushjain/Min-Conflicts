@@ -286,12 +286,11 @@ parser.add_argument("-n", type=int, default=4, help="size of problem")
 parser.add_argument("-i", default='test', help="file containing the initial input configuration for sudoku")
 args = parser.parse_args()
 
-
 if args.p == "NQueens":
     prob = NQueensProblem(args.n)    # no solution for < 4
     print 'NQueens: n =', args.n
 elif args.p == "sudoku":
-    predefValues = util.readConfigFile(args.i)
+    predefValues = util.readConfigFile(args.i, args.n)
     prob = sudoku(N=args.n, predefinedValues=predefValues)
     print 'sudoku: n =', args.n
 

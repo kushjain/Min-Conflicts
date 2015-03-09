@@ -1,6 +1,7 @@
 """This file includes basic utility functions and files"""
 import inspect
 import sys
+from itertools import cycle
 
 class bcolors:
     """
@@ -30,55 +31,24 @@ def raiseNotDefined():
     print "*** Method not implemented: %s at line %s of %s" % (method, line, fileName)
     sys.exit(0)
 
-
-def readConfigFile(fname, N):
+def readConfigFile(fname, N=9):
     """
-    Choose which readConfig File to call. One deals where each row input is on different line and another deals when whole puzzle is on single line
-    """"
-
-    #Can we merge two functions together?
-    
-    with open(fname, 'r') as fin:
-        #Easier way to access single line?
-        for line in fin:
-            if len(line) > N:
-                result = readConfigFile_same(fname, N)
-                break
-            else:
-                result = readConfigFile_different(fname)
-        return result
-
-
-def readConfigFile_different(fname):
+    read a sudoku input config file and return the encoded list of values
+    return value format: (x-pos, y-pos, val)
+    N is the size of the board
     """
-    read a sudoku input config file : Each row is in different line
-    return value format: ((x-pos, y-pos), val)
-    """
-    i = 0
+
+    row = cycle([x for x in range(N)])
     result = []
-    with open(fname, 'r') as fin:
-        for line in fin:
-            result.extend([((i, j), int(x)) for j,x in enumerate(line) if str.isdigit(x)])
-            i = i+1
-    return result
 
-def readConfigFile_same(fname, N):
-    """
-    read a sudoku input config file : Complete puzzle is on same line
-    return value format: ((x-pos, y-pos), val)
-    """
-    i = 0
-    result = []
     with open(fname, 'r') as fin:
-
-        #Improve it. There must be easier way to access a single line from file.
+        val = []
         for line in fin:
-            puzzle = line
-            break
-        
-        while i<N:
-            row = puzzle[i*N:i*N+N+1]
-            result.extend([((i, j), int(k)) for j, k in enumerate(row) if str.isdigit(k)])
-            i += 1
-            
+            if line.strip() == '':
+                continue
+            i = row.next()
+            val.extend([((i, j), int(x)) for j,x in enumerate(line) if str.isdigit(x)])
+            if i == N-1:
+                result.append(val)
+                val = []
     return result

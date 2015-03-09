@@ -10,6 +10,7 @@ def minConflict(problem, numIter=100000):
     Solution to CSP, or failure
     """
 
+    print 'number of iterations =', numIter
     state = problem.getStartState()
     print "Initial State"
     problem.visualize(state)

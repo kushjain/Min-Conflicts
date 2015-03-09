@@ -34,7 +34,7 @@ def raiseNotDefined():
 def readConfigFile(fname, N):
     """
     Choose which readConfig File to call. One deals where each row input is on different line and another deals when whole puzzle is on single line
-    """"
+    """
 
     #Can we merge two functions together?
     

@@ -1,6 +1,7 @@
 """This file includes basic utility functions and files"""
 import inspect
 import sys
+from itertools import cycle
 
 
 
@@ -38,17 +39,18 @@ def readConfigFile(fname, N=9):
     return value format: (x-pos, y-pos, val)
     N is the size of the board
     """
-    i = 0
+
+    row = cycle([x for x in range(N)])
     result = []
+
     with open(fname, 'r') as fin:
         val = []
-        while True:
-            for i in range(N):
-                line = fin.readline()
-                if not line:
-                    break
-                val.extend([((i, j), int(x)) for j,x in enumerate(line) if str.isdigit(x)])
-            else:
-                break
-        result.append(val)
+        for line in fin:
+            if line.strip() == '':
+                continue
+            i = row.next()
+            val.extend([((i, j), int(x)) for j,x in enumerate(line) if str.isdigit(x)])
+            if i == N-1:
+                result.append(val)
+                val = []
     return result

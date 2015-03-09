@@ -283,19 +283,20 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", choices=['NQueens', 'sudoku'], default='NQueens', help="type of problem")
 parser.add_argument("-n", type=int, default=4, help="size of problem")
+parser.add_argument("-t", type=int, default=10000, help="number of iterations")
 parser.add_argument("-i", default='test', help="file containing the initial input configuration for sudoku")
 args = parser.parse_args()
-
 
 if args.p == "NQueens":
     prob = [NQueensProblem(args.n)]    # no solution for < 4
     print 'NQueens: n =', args.n
 elif args.p == "sudoku":
     predefValues = util.readConfigFile(args.i)
+    print len(predefValues), 'sudoku(s)'
     prob = [sudoku(N=args.n, predefinedValues=val) for val in predefValues]
     print 'sudoku: n =', args.n
 
 #state = prob.getStartState()
 
 for p in prob:
-    print solveAgent.minConflict(p)
+    print solveAgent.minConflict(p, args.t)
